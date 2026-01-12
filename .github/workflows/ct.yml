@@ -1,0 +1,36 @@
+name: CT (Continuous Training)
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Daily at midnight
+  workflow_dispatch:      # Manual trigger
+
+jobs:
+  smoke-train:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          cd ai-service
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Smoke Training
+        env:
+          MLFLOW_TRACKING_URI: file:./mlruns
+        run: |
+          cd ai-service
+          python - << 'EOF'
+          # Simple wrapper to verify training runs without errors
+          import mlops.train as t
+          if __name__ == '__main__':
+              t.main()
+          EOF
