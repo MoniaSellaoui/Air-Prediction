@@ -1,6 +1,0 @@
-artifact_location: file:///C:/Users/i/Desktop/MLOPS/Air-Predection/ai-service/mlruns/109880241850840103
-creation_time: 1768164091313
-experiment_id: '109880241850840103'
-last_update_time: 1768164091313
-lifecycle_stage: active
-name: aqi_zenml_pipeline

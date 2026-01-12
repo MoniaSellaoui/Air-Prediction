@@ -38,7 +38,7 @@ jobs:
 
       - name: Smoke training (epochs=1)
         env:
-          MLFLOW_TRACKING_URI: file:./mlruns
+          MLFLOW_TRACKING_URI: ./mlruns
         run: |
           cd ai-service
           # Run inline python script to force epochs=1 for smoke test

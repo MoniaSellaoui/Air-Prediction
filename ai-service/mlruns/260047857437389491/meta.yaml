@@ -1,6 +1,0 @@
-artifact_location: file:///C:/Users/i/Desktop/MLOPS/Air-Predection/ai-service/mlruns/260047857437389491
-creation_time: 1768070306235
-experiment_id: '260047857437389491'
-last_update_time: 1768070306235
-lifecycle_stage: active
-name: air_quality_regression_optuna
