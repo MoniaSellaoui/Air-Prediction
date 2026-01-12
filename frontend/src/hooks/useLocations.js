@@ -31,3 +31,31 @@ export const useAddLocation = () => {
         }
     });
 };
+export const useDeleteLocation = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (locationId) => {
+            await api.delete(`/api/locations/${locationId}`);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries(['locations']);
+            toast.success('Location removed');
+        },
+        onError: (error) => {
+            toast.error('Failed to remove location');
+            console.error(error);
+        }
+    });
+};
+
+export const useSearchLocations = (query) => {
+    return useQuery({
+        queryKey: ['search-locations', query],
+        queryFn: async () => {
+            if (!query) return [];
+            const { data } = await api.get(`/api/locations/public/search?q=${encodeURIComponent(query)}`);
+            return data;
+        },
+        enabled: !!query && query.length > 2,
+    });
+};

@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package aqi;
+
+message GetAQIRequest {
+  string location = 1;
+}
+
+message AQI {
+  string location = 1;
+  float index = 2;
+  string bucket = 3;
+}
+
+service AqiService {
+  rpc GetAQI(GetAQIRequest) returns (AQI);
+}

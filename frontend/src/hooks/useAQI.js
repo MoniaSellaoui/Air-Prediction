@@ -14,13 +14,14 @@ export const useAQI = (locationName) => {
     });
 };
 
-export const useAQIHistory = (locationId) => {
+export const useAQIHistory = (locationName) => {
     return useQuery({
-        queryKey: ['aqi-history', locationId],
+        queryKey: ['aqi-history', locationName],
         queryFn: async () => {
-            const { data } = await api.get(`/api/aqi/history/${locationId}`);
+            const encoded = encodeURIComponent(locationName);
+            const { data } = await api.get(`/api/aqi/history/${encoded}`);
             return data;
         },
-        enabled: !!locationId
+        enabled: !!locationName
     })
 }

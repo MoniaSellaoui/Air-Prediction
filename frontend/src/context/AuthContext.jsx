@@ -19,7 +19,9 @@ export const AuthProvider = ({ children }) => {
             const response = await api.post('/auth/login', { email, password });
             const { token, user: userData } = response.data;
             localStorage.setItem('token', token);
-            setUser(userData || { email });
+            // Ensure we store a consistent user object
+            const userObj = userData || { email, id: response.data.userId || response.data.id };
+            setUser(userObj);
             toast.success('Logged in successfully');
             return true;
         } catch (error) {

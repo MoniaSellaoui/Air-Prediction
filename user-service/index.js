@@ -13,7 +13,7 @@ require('dotenv').config();
 // === Constants ===
 const PORT = process.env.USER_SERVICE_PORT || 5000;
 const SALT_ROUNDS = 10;
-const JWT_SECRET = process.env.JWT_SECRET || 'default_secret';
+const JWT_SECRET = process.env.JWT_SECRET || 'votre_super_secret_jwt_2024';
 const JWT_EXPIRATION = process.env.JWT_EXPIRATION || '24h';
 
 // === Database Setup ===
@@ -21,7 +21,7 @@ const db = new sqlite3.Database('./users.db');
 
 // Promisify database operations
 const dbRun = (sql, params = []) => new Promise((resolve, reject) => {
-  db.run(sql, params, function(err) {
+  db.run(sql, params, function (err) {
     if (err) reject(err);
     else resolve(this);
   });
@@ -46,7 +46,7 @@ db.serialize(async () => {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
-    
+
     // Add indexes for performance
     await dbRun('CREATE INDEX IF NOT EXISTS idx_email ON users(email)');
     console.log('Database initialized successfully');
@@ -298,7 +298,7 @@ app.use((req, res, next) => {
   // Augmenter le timeout à 30 secondes
   req.setTimeout(30000);
   res.setTimeout(30000);
-  
+
   // Gérer les événements de timeout
   req.on('timeout', () => {
     console.error('Request timeout');
@@ -379,6 +379,7 @@ app.post('/auth/register', async (req, res) => {
         email: user.email
       }
     });
+    console.log('Register Success:', email);
   } catch (error) {
     console.error('Registration error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -387,19 +388,24 @@ app.post('/auth/register', async (req, res) => {
 
 app.post('/auth/login', async (req, res) => {
   try {
+    console.log('--- LOGIN ATTEMPT ---');
+    console.log('Body:', req.body);
     const { email, password } = req.body;
 
     if (!email || !password) {
+      console.log('Login failed: Missing fields');
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
     const user = await dbGet('SELECT * FROM users WHERE email = ?', [email]);
     if (!user) {
+      console.log('Login failed: User not found', email);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
+      console.log('Login failed: Wrong password', email);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 

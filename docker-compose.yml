@@ -43,6 +43,7 @@ services:
       - JWT_SECRET=votre_super_secret_jwt_2024
       - AQI_SERVICE_PORT=5003
       - KAFKA_BROKER=kafka:9092
+      - AI_SERVICE_URL=http://model-serving:8000
     volumes:
       - aqi-data:/data
     depends_on:
@@ -179,6 +180,15 @@ services:
       ZENML_STORE_URL: mysql://zenml:zenmlpass@zenml-db:3306/zenml
       ZENML_DEFAULT_USER_NAME: admin
       ZENML_DEFAULT_USER_PASSWORD: zenml
+  model-serving:
+    build:
+      context: ./ai-service/serving
+    ports:
+      - "8000:8000"
+    environment:
+      - MODEL_PATH=/app/models/model_v1.pt
+    volumes:
+      - ./ai-service/models:/app/models
     networks:
       - app-network
 

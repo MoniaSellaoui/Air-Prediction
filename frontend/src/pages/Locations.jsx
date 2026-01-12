@@ -1,22 +1,24 @@
 import { useState, useEffect } from 'react';
+import { useLocations, useAddLocation, useDeleteLocation } from '../hooks/useLocations';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Loader2, Plus, MapPin, Navigation } from 'lucide-react';
+import { Loader2, Plus, MapPin, Navigation, Trash2 } from 'lucide-react';
+import api from '../lib/api';
 
 export default function Locations() {
-    const [locations, setLocations] = useState([]);
+    const { data: locations, isLoading } = useLocations();
+    const addLocationMutation = useAddLocation();
+    const deleteLocationMutation = useDeleteLocation();
+
     const [cities, setCities] = useState([]);
     const [selectedCity, setSelectedCity] = useState('');
-    const [isLoading, setIsLoading] = useState(true);
 
-    // Charger les villes disponibles
+    // Charger les villes disponibles via le client api synchronisé
     useEffect(() => {
         const fetchCities = async () => {
             try {
-                const response = await fetch('http://localhost:3000/cities');
-                const data = await response.json();
+                const { data } = await api.get('/cities');
                 setCities(data);
             } catch (error) {
                 console.error('Error fetching cities:', error);
@@ -25,79 +27,27 @@ export default function Locations() {
         fetchCities();
     }, []);
 
-    // Charger les localisations de l'utilisateur
-    useEffect(() => {
-        const fetchLocations = async () => {
-            try {
-                const token = localStorage.getItem('token');
-                if (!token) {
-                    setIsLoading(false);
-                    return;
-                }
-                
-                const response = await fetch('http://localhost:3000/api/locations', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    setLocations(data || []);
-                }
-            } catch (error) {
-                console.error('Error fetching locations:', error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchLocations();
-    }, []);
-
     const handleAddLocation = async (e) => {
         e.preventDefault();
-        if (!selectedCity.trim()) return;
+        const cityData = cities.find(city => city.name === selectedCity);
+        if (!cityData) return;
 
-        try {
-            const token = localStorage.getItem('token');
-            const cityData = cities.find(city => city.name === selectedCity);
-            
-            if (!cityData) {
-                alert('Ville non trouvée');
-                return;
-            }
-
-            const response = await fetch('http://localhost:3000/api/locations', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    name: cityData.name,
-                    city: cityData.city,
-                    latitude: cityData.latitude,
-                    longitude: cityData.longitude
-                })
-            });
-
-            if (response.ok) {
-                const newLocation = await response.json();
-                setLocations([...locations, newLocation]);
-                setSelectedCity('');
-                alert('Location ajoutée avec succès!');
-            } else {
-                alert('Erreur lors de l\'ajout de la location');
-            }
-        } catch (error) {
-            console.error('Error adding location:', error);
-            alert('Erreur lors de l\'ajout de la location');
-        }
+        addLocationMutation.mutate({
+            name: cityData.name,
+            city: cityData.city,
+            latitude: cityData.latitude,
+            longitude: cityData.longitude
+        }, {
+            onSuccess: () => setSelectedCity('')
+        });
     };
 
     if (isLoading) {
-        return <div className="flex h-[50vh] items-center justify-center"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div>;
+        return (
+            <div className="flex h-[50vh] items-center justify-center">
+                <Loader2 className="animate-spin h-10 w-10 text-primary" />
+            </div>
+        );
     }
 
     return (
@@ -124,7 +74,7 @@ export default function Locations() {
                                 id="city"
                                 value={selectedCity}
                                 onChange={(e) => setSelectedCity(e.target.value)}
-                                className="w-full p-2 rounded-md bg-muted/30 border border-muted-foreground/20"
+                                className="w-full p-2 rounded-md bg-muted/30 border border-muted-foreground/20 text-foreground"
                             >
                                 <option value="">Choose a city...</option>
                                 {cities.map((city) => (
@@ -136,9 +86,14 @@ export default function Locations() {
                         </div>
                         <Button
                             type="submit"
+                            disabled={!selectedCity || addLocationMutation.isLoading}
                             className="bg-primary hover:bg-primary/90 w-full sm:w-auto"
                         >
-                            <Plus className="mr-2 h-4 w-4" />
+                            {addLocationMutation.isLoading ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                                <Plus className="mr-2 h-4 w-4" />
+                            )}
                             Add Location
                         </Button>
                     </form>
@@ -156,16 +111,27 @@ export default function Locations() {
                             { bg: 'card-gradient-4', border: 'border-l-emerald-500', iconBg: 'bg-gradient-to-br from-emerald-400 to-teal-500', iconShadow: 'shadow-emerald-500/30' },
                         ];
                         const style = gradients[index % gradients.length];
+                        const locId = location.id || location._id;
 
                         return (
-                            <Card key={location.id || index} className={`glass-card hover:shadow-2xl transition-all duration-300 border-l-4 ${style.border} ${style.bg} overflow-hidden relative`}>
+                            <Card key={locId} className={`glass-card hover:shadow-2xl transition-all duration-300 border-l-4 ${style.border} ${style.bg} overflow-hidden relative group`}>
                                 <div className={`absolute top-0 right-0 w-32 h-32 ${style.iconBg} opacity-10 rounded-full blur-3xl`}></div>
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative z-10">
                                     <CardTitle className="text-lg font-semibold">
                                         {location.name || location.city}
                                     </CardTitle>
-                                    <div className={`p-2 ${style.iconBg} rounded-full shadow-lg ${style.iconShadow} animate-float`} style={{ animationDelay: `${index * 0.1}s` }}>
-                                        <MapPin className="h-5 w-5 text-white" />
+                                    <div className="flex items-center gap-2">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                                            onClick={() => deleteLocationMutation.mutate(locId)}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                        <div className={`p-2 ${style.iconBg} rounded-full shadow-lg ${style.iconShadow} animate-float`} style={{ animationDelay: `${index * 0.1}s` }}>
+                                            <MapPin className="h-5 w-5 text-white" />
+                                        </div>
                                     </div>
                                 </CardHeader>
                                 <CardContent className="space-y-3 relative z-10">
@@ -173,13 +139,13 @@ export default function Locations() {
                                         <Navigation className="h-4 w-4" />
                                         <span className="font-mono">
                                             {location.latitude && location.longitude
-                                                ? `${location.latitude.toFixed(2)}°, ${location.longitude.toFixed(2)}°`
+                                                ? `${Number(location.latitude).toFixed(2)}°, ${Number(location.longitude).toFixed(2)}°`
                                                 : 'Coordinates unavailable'}
                                         </span>
                                     </div>
                                     <div className="flex items-center justify-between pt-2 border-t border-white/10">
                                         <p className="text-sm font-medium text-muted-foreground">
-                                            {location.city || 'Unknown City'}
+                                            {location.city || location.name}
                                         </p>
                                     </div>
                                 </CardContent>
