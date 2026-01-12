@@ -1,0 +1,30 @@
+# Environment files
+.env
+.env.*
+
+# DVC local config (secrets, machine-specific)
+.dvc/config.local
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pkl
+*.pt
+
+# Virtual envs
+.venv/
+venv/
+
+# Node
+node_modules/
+
+# Logs
+*.log
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo

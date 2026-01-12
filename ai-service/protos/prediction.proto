@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package prediction;
+
+service PredictionService {
+  rpc Predict (PredictionRequest) returns (PredictionResponse);
+}
+
+message PredictionRequest {
+  string user_id = 1;
+  string location = 2;
+  float pm25 = 3;
+  float pm10 = 4;
+  float no = 5;
+  float no2 = 6;
+  float nox = 7;
+  float nh3 = 8;
+  float co = 9;
+  float so2 = 10;
+  float o3 = 11;
+  float benzene = 12;
+  float toluene = 13;
+  float xylene = 14;
+}
+
+message PredictionResponse {
+  int32 aqi = 1;
+  string bucket = 2;
+}

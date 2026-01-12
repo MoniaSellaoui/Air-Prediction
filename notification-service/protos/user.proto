@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package user;
+
+// Définition des messages et services pour user.proto
+message User {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+}
+
+service UserService {
+  rpc GetUser (UserRequest) returns (User);
+}
+
+message UserRequest {
+  string id = 1;
+}

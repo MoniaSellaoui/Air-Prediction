@@ -1,0 +1,16 @@
+# === DATA / TRAINING PARAMS FOR AIR-PREDECTION ===
+
+data:
+  raw_path: ai-service/data/raw/data2.csv
+  test_size: 0.2
+  random_state: 42
+
+model:
+  epochs: 5
+  batch_size: 64
+  lr: 0.001
+  model_path: ai-service/models/model_v1.pt
+
+mlflow:
+  tracking_uri: http://127.0.0.1:5001
+  experiment_name: air_quality_regression

@@ -1,0 +1,25 @@
+{
+  "name": "ai-service",
+  "version": "1.0.0",
+  "description": "AI Service for Air Quality Prediction",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@tensorflow/tfjs-node": "^4.17.0",
+    "express": "^4.18.2",
+    "kafkajs": "^2.2.4",
+    "winston": "^3.11.0",
+    "dotenv": "^16.4.1",
+    "cors": "^2.8.5",
+    "mongoose": "^8.1.1",
+    "node-fetch": "^2.7.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "nodemon": "^3.0.3"
+  }
+} 

@@ -1,0 +1,223 @@
+@config "../tailwind.config.js";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Premium Indigo/Violet Palette - Light Mode */
+    --background: 240 20% 98%;
+    /* Soft off-white with violet tint */
+    --foreground: 224 71.4% 4.1%;
+    /* Deep dark violet-blue */
+
+    --card: 0 0% 100%;
+    --card-foreground: 224 71.4% 4.1%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 71.4% 4.1%;
+
+    /* Primary: Vibrant Violet */
+    --primary: 262 83.3% 57.8%;
+    --primary-foreground: 210 20% 98%;
+
+    /* Secondary: Soft Lavender */
+    --secondary: 262 30% 96%;
+    --secondary-foreground: 262 83.3% 57.8%;
+
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+
+    --accent: 262 30% 96%;
+    --accent-foreground: 262 83.3% 57.8%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 20% 98%;
+
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 262 83.3% 57.8%;
+
+    --radius: 0.75rem;
+    /* More rounded borders for modern look */
+  }
+
+  .dark {
+    /* Premium Indigo/Violet Palette - Dark Mode */
+    --background: 260 25% 12%;
+    /* Deep violet background */
+    --foreground: 210 20% 98%;
+
+    --card: 260 25% 15%;
+    /* Slightly lighter for cards */
+    --card-foreground: 210 20% 98%;
+
+    --popover: 260 25% 15%;
+    --popover-foreground: 210 20% 98%;
+
+    /* Primary: Vibrant Violet (same or slightly adjusted) */
+    --primary: 263 70% 67%;
+    --primary-foreground: 210 20% 98%;
+
+    /* Secondary: Muted Violet */
+    --secondary: 260 20% 25%;
+    --secondary-foreground: 210 20% 98%;
+
+    --muted: 260 20% 25%;
+    --muted-foreground: 217.9 10.6% 64.9%;
+
+    --accent: 260 30% 25%;
+    /* Rich accent for hover states */
+    --accent-foreground: 210 20% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 20% 98%;
+
+    --border: 260 20% 25%;
+    --input: 260 20% 25%;
+    --ring: 263 70% 67%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: 'Outfit', sans-serif;
+  }
+}
+
+/* Glassmorphism Utilities */
+@layer utilities {
+  .glass {
+    background-color: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  }
+
+  .dark .glass {
+    background-color: rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .glass-card {
+    background-color: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  }
+
+  .dark .glass-card {
+    background-color: rgba(15, 23, 42, 0.5);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Custom Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes gradientShift {
+
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradientShift 8s ease infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Vibrant Gradient Utilities */
+@layer utilities {
+  .gradient-purple-blue {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+
+  .gradient-pink-orange {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  }
+
+  .gradient-green-blue {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  }
+
+  .gradient-orange-red {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  }
+
+  .gradient-teal-lime {
+    background: linear-gradient(135deg, #0ba360 0%, #3cba92 100%);
+  }
+
+  .gradient-indigo-purple {
+    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+  }
+
+  /* Colorful Card Backgrounds */
+  .card-gradient-1 {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  }
+
+  .card-gradient-2 {
+    background: linear-gradient(135deg, rgba(79, 172, 254, 0.1) 0%, rgba(0, 242, 254, 0.1) 100%);
+  }
+
+  .card-gradient-3 {
+    background: linear-gradient(135deg, rgba(250, 112, 154, 0.1) 0%, rgba(254, 225, 64, 0.1) 100%);
+  }
+
+  .card-gradient-4 {
+    background: linear-gradient(135deg, rgba(11, 163, 96, 0.1) 0%, rgba(60, 186, 146, 0.1) 100%);
+  }
+}

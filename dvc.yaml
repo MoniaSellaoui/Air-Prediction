@@ -1,0 +1,16 @@
+stages:
+  train_ai_model:
+    cmd: cd ai-service && python -m mlops.train
+    deps:
+      - ai-service/mlops/train.py
+      - ai-service/mlops/steps/data_loader.py
+      - ai-service/mlops/steps/train.py
+      - ai-service/data/raw/data2.csv
+    outs:
+      - ai-service/models/model_v1.pt
+    params:
+      - data.test_size
+      - data.random_state
+      - model.epochs
+      - model.batch_size
+      - model.lr

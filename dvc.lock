@@ -1,0 +1,33 @@
+schema: '2.0'
+stages:
+  train_ai_model:
+    cmd: cd ai-service && python -m mlops.train
+    deps:
+    - path: ai-service/data/raw/data2.csv
+      hash: md5
+      md5: 72ae139173c6dd4b0238437ec45c6971
+      size: 7726888
+    - path: ai-service/mlops/steps/data_loader.py
+      hash: md5
+      md5: 3bcb275459e41d9fddb58f723f5e40b2
+      size: 1416
+    - path: ai-service/mlops/steps/train.py
+      hash: md5
+      md5: 6844d67f8a60b8dcba27f155c1ef9977
+      size: 1639
+    - path: ai-service/mlops/train.py
+      hash: md5
+      md5: 092d819ae2f15ce6a9fa746ca70dbe06
+      size: 2350
+    params:
+      params.yaml:
+        data.random_state: 42
+        data.test_size: 0.2
+        model.batch_size: 64
+        model.epochs: 5
+        model.lr: 0.001
+    outs:
+    - path: ai-service/models/model_v1.pt
+      hash: md5
+      md5: 6a6ec8df79d42943bd89fe7689d39274
+      size: 23329
