@@ -83,4 +83,9 @@ def main():
         torch.save(model.state_dict(), model_path)
         print(f"Modèle sauvegardé dans {model_path}")
 
-      
+       # Log artefact
+        mlflow.log_artifact(model_path, artifact_path="models")
+
+
+if __name__ == "__main__":
+    main() 
