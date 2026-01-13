@@ -5,11 +5,15 @@ Enregistre rmse dans MLflow pour chaque trial.
 """
 
 import math
+
 import os
+os.environ["CUDA_VISIBLE_DEVICES"] = ""  # Désactive le GPU
+os.environ["MKL_THREADING_LAYER"] = "GNU" 
+import torch
 
 import mlflow
 import optuna
-import torch
+
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
 

@@ -9,6 +9,7 @@ const winston = require('winston');
 const rateLimit = require('express-rate-limit');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
+const { metricsMiddleware, errorMiddleware, metricsEndpoint } = require('./middleware/metrics');
 require('dotenv').config();
 
 // === Constants ===
@@ -45,17 +46,30 @@ const app = express();
 // Basic Middleware
 app.use(bodyParser.json());
 app.use(cookieParser());
+app.use(metricsMiddleware);
 
-// Relaxed CORS for development
-app.use(cors({
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+// CORS configuration - explicit origins required when using credentials
+// CORS configuration - explicit origins required when using credentials
+const corsOptions = {
+  origin: function (origin, callback) {
+    const allowedOrigins = ['http://localhost:5173', 'http://127.0.0.1:5173'];
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-}));
+};
+
+app.use(cors(corsOptions));
 
 // Preflight OPTIONS handler
-app.options('*', cors());
+app.options('*', cors(corsOptions));
 
 // Request Logging Middleware
 app.use((req, res, next) => {
@@ -118,6 +132,9 @@ app.get('/health', (req, res) => {
   res.json({ status: 'healthy', timestamp: new Date().toISOString() });
 });
 
+// Metrics endpoint
+app.get('/metrics', metricsEndpoint);
+
 // Cities endpoint (direct)
 app.get('/cities', (req, res) => {
   const cities = [
@@ -146,6 +163,13 @@ const createLoggingProxy = (target, options = {}) => {
       }
       fixRequestBody(proxyReq, req);
     },
+    onProxyRes: (proxyRes, req, res) => {
+      // Strip upstream CORS headers to let Gateway handle it
+      delete proxyRes.headers['access-control-allow-origin'];
+      delete proxyRes.headers['access-control-allow-methods'];
+      delete proxyRes.headers['access-control-allow-headers'];
+      delete proxyRes.headers['access-control-allow-credentials'];
+    },
     ...options
   });
 };
@@ -161,6 +185,7 @@ app.use('/api/notifications', authMiddleware, createLoggingProxy(SERVICES.NOTIFI
 }));
 
 // Error Handler
+app.use(errorMiddleware);
 app.use((err, req, res, next) => {
   logger.error('Gateway Error:', err);
   if (!res.headersSent) {

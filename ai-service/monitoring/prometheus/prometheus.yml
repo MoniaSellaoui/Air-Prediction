@@ -1,0 +1,89 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'Air-Predection'
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+rule_files:
+  - "/etc/prometheus/alerts.yml"
+
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # API Gateway
+  - job_name: 'api-gateway'
+    static_configs:
+      - targets: ['api-gateway:3000']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  # User Service
+  - job_name: 'user-service'
+    static_configs:
+      - targets: ['user-service:5000']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  # AQI Service
+  - job_name: 'aqi-service'
+    static_configs:
+      - targets: ['aqi-service:5003']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  # Location Service
+  - job_name: 'location-service'
+    static_configs:
+      - targets: ['location-service:5002']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  # AI Service
+  - job_name: 'ai-service'
+    static_configs:
+      - targets: ['ai-service:5005']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  # Notification Service
+  - job_name: 'notification-service'
+    static_configs:
+      - targets: ['notification-service:5004']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  # Model Serving
+  - job_name: 'model-serving'
+    static_configs:
+      - targets: ['model-serving:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  # MLflow Tracking Server
+  - job_name: 'mlflow'
+    static_configs:
+      - targets: ['mlflow:5000']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # MinIO
+  - job_name: 'minio'
+    static_configs:
+      - targets: ['minio:9000']
+    metrics_path: '/minio/v2/metrics/cluster'
+    scheme: 'http'
+    scrape_interval: 30s
+
+  # Kafka
+  - job_name: 'kafka'
+    static_configs:
+      - targets: ['kafka:9092']
+    scrape_interval: 30s

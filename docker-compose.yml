@@ -1,4 +1,4 @@
-version: '3.8'
+
 
 services:
   api-gateway:
@@ -6,18 +6,20 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NODE_ENV=development
-      - API_GATEWAY_PORT=3000
-      - JWT_SECRET=votre_super_secret_jwt_2024
-      - LOCATION_SERVICE_URL=http://location-service:5002
-      - USER_SERVICE_URL=http://user-service:5000
-      - AQI_SERVICE_URL=http://aqi-service:5003
-      - NOTIFICATION_SERVICE_URL=http://notification-service:5004
-      - AI_SERVICE_URL=http://ai-service:5005
+      NODE_ENV: development
+      API_GATEWAY_PORT: 3000
+      JWT_SECRET: votre_super_secret_jwt_2024
+      LOCATION_SERVICE_URL: http://location-service:5002
+      USER_SERVICE_URL: http://user-service:5000
+      AQI_SERVICE_URL: http://aqi-service:5003
+      NOTIFICATION_SERVICE_URL: http://notification-service:5004
+      AI_SERVICE_URL: http://ai-service:5005
     depends_on:
       - location-service
       - user-service
       - ai-service
+      - aqi-service
+      - notification-service
     networks:
       - app-network
 
@@ -26,9 +28,9 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - NODE_ENV=development
-      - JWT_SECRET=votre_super_secret_jwt_2024
-      - USER_SERVICE_PORT=5000
+      NODE_ENV: development
+      JWT_SECRET: votre_super_secret_jwt_2024
+      USER_SERVICE_PORT: 5000
     volumes:
       - user-data:/data
     networks:
@@ -39,11 +41,12 @@ services:
     ports:
       - "5003:5003"
     environment:
-      - NODE_ENV=development
-      - JWT_SECRET=votre_super_secret_jwt_2024
-      - AQI_SERVICE_PORT=5003
-      - KAFKA_BROKER=kafka:9092
-      - AI_SERVICE_URL=http://model-serving:8000
+      NODE_ENV: development
+      JWT_SECRET: votre_super_secret_jwt_2024
+      AQI_SERVICE_PORT: 5003
+      KAFKA_BROKER: kafka:9092
+      AI_SERVICE_URL: http://model-serving:8000
+      AQICN_API_KEY: ${AQICN_API_KEY}
     volumes:
       - aqi-data:/data
     depends_on:
@@ -57,9 +60,9 @@ services:
     ports:
       - "5002:5002"
     environment:
-      - NODE_ENV=development
-      - JWT_SECRET=votre_super_secret_jwt_2024
-      - LOCATION_SERVICE_PORT=5002
+      NODE_ENV: development
+      JWT_SECRET: votre_super_secret_jwt_2024
+      LOCATION_SERVICE_PORT: 5002
     volumes:
       - ./location-service/data:/app/data
     networks:
@@ -70,10 +73,10 @@ services:
     ports:
       - "5004:5004"
     environment:
-      - NODE_ENV=development
-      - JWT_SECRET=votre_super_secret_jwt_2024
-      - NOTIFICATION_SERVICE_PORT=5004
-      - KAFKA_BROKER=kafka:9092
+      NODE_ENV: development
+      JWT_SECRET: votre_super_secret_jwt_2024
+      NOTIFICATION_SERVICE_PORT: 5004
+      KAFKA_BROKER: kafka:9092
     volumes:
       - notification-data:/data
     depends_on:
@@ -86,8 +89,8 @@ services:
     ports:
       - "5005:5005"
     environment:
-      - NODE_ENV=development
-      - AI_SERVICE_PORT=5005
+      NODE_ENV: development
+      AI_SERVICE_PORT: 5005
     volumes:
       - ./ai-service/models:/models
       - ai-data:/data
@@ -122,8 +125,8 @@ services:
     image: minio/minio
     command: server /data --console-address ":9001"
     ports:
-      - "9000:9000"   # API S3
-      - "9001:9001"   # Console web
+      - "9000:9000"
+      - "9001:9001"
     environment:
       MINIO_ROOT_USER: minio
       MINIO_ROOT_PASSWORD: minio12345
@@ -136,7 +139,7 @@ services:
     image: python:3.10-slim
     working_dir: /mlflow
     ports:
-      - "5001:5000"  # host:container
+      - "5001:5000"
     environment:
       MLFLOW_S3_ENDPOINT_URL: http://minio:9000
       AWS_ACCESS_KEY_ID: minio
@@ -180,15 +183,52 @@ services:
       ZENML_STORE_URL: mysql://zenml:zenmlpass@zenml-db:3306/zenml
       ZENML_DEFAULT_USER_NAME: admin
       ZENML_DEFAULT_USER_PASSWORD: zenml
+    networks:
+      - app-network
+
   model-serving:
-    build:
-      context: ./ai-service/serving
+    build: ./ai-service/serving
     ports:
       - "8000:8000"
     environment:
-      - MODEL_PATH=/app/models/model_v1.pt
+      MODEL_PATH: /app/models/model_v1.pt
     volumes:
       - ./ai-service/models:/app/models
+    networks:
+      - app-network
+      
+  # Prometheus for Monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: air_prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./ai-service/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./ai-service/monitoring/prometheus/alerts.yml:/etc/prometheus/alerts.yml
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+    networks:
+      - app-network
+
+  # Grafana for Visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: air_grafana
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_SECURITY_ADMIN_USER: admin
+      GF_USERS_ALLOW_SIGN_UP: false
+    volumes:
+      - ./ai-service/monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./ai-service/monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
     networks:
       - app-network
 
@@ -201,6 +241,10 @@ volumes:
   minio-data:
   mlflow-data:
   zenmlmysqldata:
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
 
 networks:
   app-network:

@@ -1,0 +1,83 @@
+groups:
+  - name: air-predection-alerts
+    interval: 30s
+    rules:
+      # Service availability alerts
+      - alert: ServiceDown
+        expr: up{job=~"api-gateway|user-service|aqi-service|location-service|ai-service|notification-service"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.job }} is down"
+          description: "{{ $labels.job }} on {{ $labels.instance }} has been unavailable for 2 minutes."
+
+      # High latency alerts
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High latency detected in {{ $labels.job }}"
+          description: "95th percentile latency is above 1 second in {{ $labels.job }}"
+
+      # Error rate alerts
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate in {{ $labels.job }}"
+          description: "Error rate is above 5% in {{ $labels.job }}"
+
+      # Prometheus alerts
+      - alert: PrometheusNotConnected
+        expr: up{job="prometheus"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Prometheus is down"
+          description: "Prometheus has been unavailable for 1 minute."
+
+      # MLflow alerts
+      - alert: MLflowDown
+        expr: up{job="mlflow"} == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "MLflow is down"
+          description: "MLflow tracking server is unavailable"
+
+      # MinIO alerts
+      - alert: MinIODown
+        expr: up{job="minio"} == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "MinIO is down"
+          description: "MinIO storage service is unavailable"
+
+      # Memory usage alerts
+      - alert: HighMemoryUsage
+        expr: container_memory_usage_bytes / container_spec_memory_limit_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage in {{ $labels.container_name }}"
+          description: "Memory usage is above 90% in {{ $labels.container_name }}"
+
+      # CPU usage alerts
+      - alert: HighCPUUsage
+        expr: rate(container_cpu_usage_seconds_total[5m]) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage in {{ $labels.container_name }}"
+          description: "CPU usage is above 80% in {{ $labels.container_name }}"

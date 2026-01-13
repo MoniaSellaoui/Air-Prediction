@@ -276,22 +276,12 @@ server.addService(userProto.UserService.service, {
 // === Express App Setup ===
 const app = express();
 
-// Augmenter la limite de payload
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// Configuration du body-parser avec des limites plus élevées
-app.use(bodyParser.json({
+// Body parsing with error handling
+app.use(express.json({
   limit: '10mb',
-  verify: (req, res, buf) => {
-    req.rawBody = buf;
-  }
+  strict: false
 }));
-
-app.use(bodyParser.urlencoded({
-  extended: true,
-  limit: '10mb'
-}));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Middleware pour gérer les timeouts
 app.use((req, res, next) => {
@@ -327,7 +317,7 @@ app.use((req, res, next) => {
 app.post('/auth/register', async (req, res) => {
   try {
     console.log('Received registration request:', req.body);
-    const { email, password, name, phone } = req.body;
+    const { email, password, name } = req.body;
 
     // Validation
     if (!email || !password || !name) {
@@ -342,9 +332,7 @@ app.post('/auth/register', async (req, res) => {
       return res.status(400).json({ error: 'Password must be at least 8 characters long' });
     }
 
-    if (phone && !validatePhone(phone)) {
-      return res.status(400).json({ error: 'Invalid phone number format' });
-    }
+   
 
     // Check if email already exists
     const existingUser = await dbGet('SELECT id FROM users WHERE email = ?', [email]);
@@ -357,11 +345,11 @@ app.post('/auth/register', async (req, res) => {
 
     await dbRun(
       'INSERT INTO users (id, name, email, password, phone) VALUES (?, ?, ?, ?, ?)',
-      [id, name, email, hashedPassword, phone || null]
+      [id, name, email, hashedPassword,]
     );
 
     const user = await dbGet(
-      'SELECT id, name, email, phone, created_at, updated_at FROM users WHERE id = ?',
+      'SELECT id, name, email,  created_at, updated_at FROM users WHERE id = ?',
       [id]
     );
 

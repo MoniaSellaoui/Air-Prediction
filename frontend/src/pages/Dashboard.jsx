@@ -38,8 +38,12 @@ export default function Dashboard() {
 
     const activeLocation = locations?.find(l => String(l.id || l._id) === String(selectedLocationId));
 
-    // Identifier for useAQI: specific geo coords or location name/city
-    const aqiQueryId = selectedLocationId === 'local' ? userCoords : (activeLocation?.city || activeLocation?.name);
+    // Identifier for useAQI: specific geo coords, search query, or location name/city
+    const aqiQueryId = selectedLocationId === 'local'
+        ? userCoords
+        : selectedLocationId.startsWith('query:')
+            ? selectedLocationId.split('query:')[1]
+            : (activeLocation?.city || activeLocation?.name);
 
     const { data: aqiData, isLoading: aqiLoading } = useAQI(aqiQueryId);
     const { data: aqiHistory } = useAQIHistory(aqiQueryId);
@@ -107,30 +111,69 @@ export default function Dashboard() {
                 </div>
             </div>
 
+            {/* Search Bar */}
+            <div className="flex justify-end gap-2 px-1">
+                <div className="relative w-full max-w-sm flex gap-2">
+                    <div className="relative w-full">
+                        <input
+                            type="text"
+                            placeholder="Search city..."
+                            className="w-full bg-card/50 backdrop-blur-sm border border-white/10 text-foreground rounded-xl px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-muted-foreground/50"
+                            id="search-input"
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    const val = e.currentTarget.value.trim();
+                                    if (val) {
+                                        setSelectedLocationId(`query:${val}`);
+                                        toast.info(`Searching for ${val}...`);
+                                    }
+                                }
+                            }}
+                        />
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-muted-foreground">
+                            <MapPin className="h-4 w-4" />
+                        </div>
+                    </div>
+                    <button
+                        onClick={() => {
+                            const input = document.getElementById('search-input');
+                            const val = input.value.trim();
+                            if (val) {
+                                setSelectedLocationId(`query:${val}`);
+                                toast.info(`Searching for ${val}...`);
+                            }
+                        }}
+                        className="px-4 py-2 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-colors font-medium shadow-lg shadow-primary/20"
+                    >
+                        Search
+                    </button>
+                </div>
+            </div>
+
             {/* KPI Cards */}
-            <div className="grid gap-8 grid-cols-1 md:grid-cols-3">
+            <div className="grid gap-4 grid-cols-3">
                 <Card className="glass-card hover:shadow-2xl transition-all duration-300 border-t-4 border-t-emerald-500 card-gradient-4 overflow-hidden relative h-full">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl"></div>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">
-                            Air Quality Index
-                        </CardTitle>
+                    <CardHeader className="flex flex-col items-center justify-center space-y-2 pb-2 relative z-10">
                         <div className="p-3 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl shadow-lg shadow-emerald-500/30 animate-float">
                             <Wind className="h-5 w-5 text-white" />
                         </div>
+                        <CardTitle className="text-sm font-medium text-muted-foreground text-center">
+                            Air Quality Index
+                        </CardTitle>
                     </CardHeader>
-                    <CardContent className="relative z-10">
-                        <div className="flex items-baseline gap-2">
+                    <CardContent className="relative z-10 flex flex-col items-center justify-center">
+                        <div className="flex items-baseline gap-2 justify-center">
                             <div className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
                                 {currentAQI ?? '--'}
                             </div>
                             {aqiData?.ai_powered && (
                                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary font-bold uppercase tracking-wider animate-pulse border border-primary/30">
-                                    AI Prediction
+                                    AI
                                 </span>
                             )}
                         </div>
-                        <p className={cn("text-xs font-medium mt-1", (!currentAQI || currentAQI < 50) ? "text-emerald-600" : currentAQI < 100 ? "text-yellow-600" : "text-destructive")}>
+                        <p className={cn("text-xs font-medium mt-1 text-center", (!currentAQI || currentAQI < 50) ? "text-emerald-600" : currentAQI < 100 ? "text-yellow-600" : "text-destructive")}>
                             {!currentAQI ? 'Waiting for data...' : currentAQI < 50 ? '✓ Good' : currentAQI < 100 ? '⚠ Moderate' : '⚠ Unhealthy'} Condition
                         </p>
                     </CardContent>
@@ -138,37 +181,37 @@ export default function Dashboard() {
 
                 <Card className="glass-card hover:shadow-2xl transition-all duration-300 border-t-4 border-t-orange-500 card-gradient-3 overflow-hidden relative h-full">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl"></div>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">
-                            Temperature
-                        </CardTitle>
+                    <CardHeader className="flex flex-col items-center justify-center space-y-2 pb-2 relative z-10">
                         <div className="p-3 bg-gradient-to-br from-orange-400 to-red-500 rounded-xl shadow-lg shadow-orange-500/30 animate-float" style={{ animationDelay: '0.2s' }}>
                             <Thermometer className="h-5 w-5 text-white" />
                         </div>
+                        <CardTitle className="text-sm font-medium text-muted-foreground text-center">
+                            Temperature
+                        </CardTitle>
                     </CardHeader>
-                    <CardContent className="relative z-10">
-                        <div className="text-4xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+                    <CardContent className="relative z-10 flex flex-col items-center justify-center">
+                        <div className="text-4xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent text-center">
                             {currentTemp !== undefined ? `${currentTemp}°C` : '--'}
                         </div>
-                        <p className="text-xs font-medium mt-1 text-orange-600">Ambient temperature</p>
+                        <p className="text-xs font-medium mt-1 text-orange-600 text-center">Ambient temperature</p>
                     </CardContent>
                 </Card>
 
                 <Card className="glass-card hover:shadow-2xl transition-all duration-300 border-t-4 border-t-blue-500 card-gradient-2 overflow-hidden relative h-full">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl"></div>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">
-                            Humidity
-                        </CardTitle>
+                    <CardHeader className="flex flex-col items-center justify-center space-y-2 pb-2 relative z-10">
                         <div className="p-3 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-xl shadow-lg shadow-blue-500/30 animate-float" style={{ animationDelay: '0.4s' }}>
                             <Droplets className="h-5 w-5 text-white" />
                         </div>
+                        <CardTitle className="text-sm font-medium text-muted-foreground text-center">
+                            Humidity
+                        </CardTitle>
                     </CardHeader>
-                    <CardContent className="relative z-10">
-                        <div className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                    <CardContent className="relative z-10 flex flex-col items-center justify-center">
+                        <div className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent text-center">
                             {currentHumidity !== undefined ? `${currentHumidity}%` : '--'}
                         </div>
-                        <p className="text-xs font-medium mt-1 text-blue-600">Relative humidity</p>
+                        <p className="text-xs font-medium mt-1 text-blue-600 text-center">Relative humidity</p>
                     </CardContent>
                 </Card>
             </div>

@@ -50,7 +50,7 @@ const db = new sqlite3.Database('./locations.db');
 
 // Promisify database operations
 const dbRun = (sql, params = []) => new Promise((resolve, reject) => {
-  db.run(sql, params, function(err) {
+  db.run(sql, params, function (err) {
     if (err) reject(err);
     else resolve(this);
   });
@@ -110,11 +110,14 @@ const validateLocationName = (name) => {
 // === Express App Setup ===
 const app = express();
 
+// CORS - Handle by API Gateway
+/*
 app.use(cors({
   origin: process.env.CORS_ORIGIN || '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
+*/
 app.use(bodyParser.json());
 app.use(limiter);
 
@@ -140,7 +143,7 @@ app.get('/cities', (req, res) => {
     { id: 9, name: 'Lille', latitude: 50.6292, longitude: 3.0573, city: 'Lille' },
     { id: 10, name: 'Rennes', latitude: 48.1173, longitude: -1.6778, city: 'Rennes' }
   ];
-  
+
   res.json(publicLocations);
 });
 
@@ -160,7 +163,7 @@ app.get('/api/locations/public', async (req, res, next) => {
       { id: 9, name: 'Lille', latitude: 50.6292, longitude: 3.0573, city: 'Lille' },
       { id: 10, name: 'Rennes', latitude: 48.1173, longitude: -1.6778, city: 'Rennes' }
     ];
-    
+
     res.json(publicLocations);
   } catch (error) {
     next(error);
@@ -182,7 +185,7 @@ app.get('/public/cities', async (req, res, next) => {
       { id: 9, name: 'Lille', latitude: 50.6292, longitude: 3.0573, city: 'Lille' },
       { id: 10, name: 'Rennes', latitude: 48.1173, longitude: -1.6778, city: 'Rennes' }
     ];
-    
+
     res.json(publicLocations);
   } catch (error) {
     next(error);

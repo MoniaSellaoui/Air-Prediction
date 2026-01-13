@@ -22,7 +22,8 @@
     "kafkajs": "^2.2.4",
     "node-cache": "^5.1.2",
     "node-fetch": "^2.7.0",
-    "sqlite3": "^5.1.7"
+    "sqlite3": "^5.1.7",
+    "prom-client": "^15.0.0"
   },
   "devDependencies": {
     "eslint": "^8.56.0",

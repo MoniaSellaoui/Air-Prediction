@@ -43,7 +43,7 @@ const db = new sqlite3.Database('./notifications.db');
 
 // Promisify database operations
 const dbRun = (sql, params = []) => new Promise((resolve, reject) => {
-  db.run(sql, params, function(err) {
+  db.run(sql, params, function (err) {
     if (err) reject(err);
     else resolve(this);
   });
@@ -90,12 +90,17 @@ const initializeDatabase = async () => {
 };
 
 // === Notification Channels Setup ===
+// === Notification Channels Setup ===
 // Twilio Setup
+/*
 const twilioClient = process.env.TWILIO_SID && process.env.TWILIO_TOKEN
   ? twilio(process.env.TWILIO_SID, process.env.TWILIO_TOKEN)
   : null;
+*/
+const twilioClient = null;
 
 // Email Setup
+/*
 const emailTransporter = process.env.SMTP_HOST
   ? nodemailer.createTransport({
       host: process.env.SMTP_HOST,
@@ -107,6 +112,8 @@ const emailTransporter = process.env.SMTP_HOST
       }
     })
   : null;
+*/
+const emailTransporter = null;
 
 // === Notification Handlers ===
 const notificationHandlers = {
@@ -159,10 +166,16 @@ class NotificationService {
     const notifications = [];
 
     try {
-      // Get user details
-      const user = await this.getUserDetails(userId);
-      if (!user) {
-        throw new Error(`User not found: ${userId}`);
+      // Get user details (skip if system)
+      let user = null;
+      if (userId !== 'system') {
+        user = await this.getUserDetails(userId);
+        if (!user) {
+          console.warn(`User not found: ${userId}, skipping notification`);
+          return [];
+        }
+      } else {
+        user = { id: 'system', name: 'System', email: 'system@local', phone: '' };
       }
 
       // Send through each channel
@@ -172,7 +185,11 @@ class NotificationService {
           const notifId = await this.logNotification(userId, type, channel, content, 'pending');
 
           // Send notification
-          await notificationHandlers[channel](user, content);
+
+          // DISABLED: External notifications disabled by user request
+          // await notificationHandlers[channel](user, content);
+
+          logger.info(`[DISABLED] external notification for channel ${channel} bypassed - marking as sent`);
 
           // Update notification status
           await this.updateNotificationStatus(notifId, 'sent');
@@ -321,9 +338,9 @@ class NotificationService {
           try {
             const user = await this.getUserDetails(notification.user_id);
             await notificationHandlers[notification.channel](user, notification.content);
-            
+
             await this.updateNotificationStatus(notification.id, 'sent');
-            
+
             logger.info(`Retry successful`, {
               notificationId: notification.id,
               userId: notification.user_id,
@@ -364,7 +381,7 @@ class NotificationService {
       endDate
     } = options;
 
-    let query = 'SELECT * FROM notifications WHERE user_id = ?';
+    let query = 'SELECT * FROM notifications WHERE (user_id = ? OR user_id = "system")';
     const params = [userId];
 
     if (status) {
@@ -412,11 +429,14 @@ class NotificationService {
 // === Express App Setup ===
 const app = express();
 
+// CORS - Handle by API Gateway
+/*
 app.use(cors({
   origin: process.env.CORS_ORIGIN || '*',
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
+*/
 app.use(bodyParser.json());
 app.use(rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -525,7 +545,7 @@ const setupKafkaConsumer = async () => {
       eachMessage: async ({ topic, message }) => {
         try {
           const data = JSON.parse(message.value.toString());
-          
+
           let content;
           if (topic === 'alerts') {
             content = `🚨 Air Quality Alert for ${data.location}: ${data.bucket} (AQI: ${data.aqi})`;

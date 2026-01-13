@@ -125,4 +125,4 @@ def aqi_training_pipeline(
 
 
 if __name__ == "__main__":
-    aqi_training_pipeline()()
+    aqi_training_pipeline()

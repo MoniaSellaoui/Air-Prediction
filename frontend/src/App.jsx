@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider, AuthContext } from './context/AuthContext';
+import { AQIAlertProvider } from './context/AQIAlertContext';
 import { Toaster } from 'sonner';
 import { useContext } from 'react';
 import Login from './pages/Login';
@@ -30,22 +31,24 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <Routes>
-          {/* Public Routes */}
-          <Route element={<PublicRoute />}>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-          </Route>
-
-          {/* Protected Routes */}
-          <Route element={<ProtectedRoute />}>
-            <Route element={<Layout />}>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/locations" element={<Locations />} />
+        <AQIAlertProvider>
+          <Routes>
+            {/* Public Routes */}
+            <Route element={<PublicRoute />}>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
             </Route>
-          </Route>
-        </Routes>
-        <Toaster position="top-center" />
+
+            {/* Protected Routes */}
+            <Route element={<ProtectedRoute />}>
+              <Route element={<Layout />}>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/locations" element={<Locations />} />
+              </Route>
+            </Route>
+          </Routes>
+          <Toaster position="top-center" />
+        </AQIAlertProvider>
       </AuthProvider>
     </Router>
   );
